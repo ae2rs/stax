@@ -1,0 +1,31 @@
+[package]
+name = "stax-tui"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+description = "A terminal dashboard for GitHub pull requests that shows stacked PRs as trees"
+license = "MIT"
+repository = "https://github.com/ae2rs/stax"
+keywords = ["github", "tui", "pull-requests", "stacked-prs", "ratatui"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "stax"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+crossterm = { version = "0.29.0", features = ["event-stream"] }
+futures = "0.3"
+ratatui = "0.30.2"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread", "process", "sync", "time"] }
+toml = "1"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+redundant_clone = "deny"
