@@ -103,35 +103,12 @@ impl TryFrom<String> for CommandTemplate {
 
 #[cfg(test)]
 mod tests {
-    use std::time::SystemTime;
-
     use super::*;
-    use crate::github::{Checks, Review};
-
-    fn pr() -> PullRequest {
-        PullRequest {
-            id: "PR_1".into(),
-            number: 7,
-            title: "t".into(),
-            url: "https://github.com/o/r/pull/7".into(),
-            body: String::new(),
-            repo: "o/r".into(),
-            author: "me".into(),
-            head: "it's;rm -rf".into(),
-            base: "main".into(),
-            draft: false,
-            review: Review::None,
-            checks: Checks::None,
-            additions: 0,
-            deletions: 0,
-            updated_at: SystemTime::UNIX_EPOCH,
-        }
-    }
 
     fn render(template: &str) -> String {
         CommandTemplate::try_from(template.to_owned())
             .unwrap()
-            .render(&pr())
+            .render(&PullRequest::fixture(7, "o/r", "it's;rm -rf", "main"))
     }
 
     #[test]

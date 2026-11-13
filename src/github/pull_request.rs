@@ -22,6 +22,30 @@ pub struct PullRequest {
     pub updated_at: SystemTime,
 }
 
+#[cfg(test)]
+impl PullRequest {
+    /// A PR whose node id is `PR_<number>`.
+    pub fn fixture(number: u64, repo: &str, head: &str, base: &str) -> Self {
+        PullRequest {
+            id: format!("PR_{number}"),
+            number,
+            title: format!("pr {number}"),
+            url: format!("https://github.com/{repo}/pull/{number}"),
+            body: String::new(),
+            repo: repo.to_owned(),
+            author: "me".to_owned(),
+            head: head.to_owned(),
+            base: base.to_owned(),
+            draft: false,
+            review: Review::None,
+            checks: Checks::None,
+            additions: 0,
+            deletions: 0,
+            updated_at: SystemTime::UNIX_EPOCH,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Review {
     None,
