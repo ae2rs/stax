@@ -1,0 +1,27 @@
+# stax reads this from ~/.config/stax/config.toml.
+
+# Each section is a tab: the open PRs one GitHub search returns.
+# stax adds `is:pr archived:false` to the filters. `limit` is 1 to 100, 20 by default.
+# Without any sections, stax shows My PRs, Review requested and Involved.
+[[sections]]
+title = "My PRs"
+filters = "is:open author:@me"
+
+[[sections]]
+title = "Review requested"
+filters = "is:open review-requested:@me"
+
+[[sections]]
+title = "Involved"
+filters = "is:open involves:@me -author:@me"
+limit = 40
+
+# A keybinding runs a shell command for the selected PR, with stax suspended.
+# Placeholders: {repo} {number} {url} {head} {base} {author}.
+# Each goes in single-quoted, so don't quote it again. Write {{ and }} for literal braces.
+# Keys: a single character, a name (enter tab esc space backspace up down left right),
+# either one with a ctrl+ prefix.
+[[keybindings]]
+key = "ctrl+l"
+name = "lazygit"
+command = "cd ~/src/$(basename {repo}) && lazygit"
