@@ -3,8 +3,9 @@ use std::io;
 use std::process::Stdio;
 
 use anyhow::{Context, Result};
+use crossterm::cursor::Hide;
 use crossterm::event::{Event, EventStream, KeyEventKind};
-use crossterm::terminal::{self, EnterAlternateScreen};
+use crossterm::terminal::{self, Clear, ClearType, EnterAlternateScreen};
 use futures::StreamExt;
 use ratatui::DefaultTerminal;
 use tokio::io::AsyncWriteExt;
@@ -118,8 +119,16 @@ async fn drive(terminal: &mut DefaultTerminal, mut app: App, client: Client) -> 
         ratatui::restore();
         let status = Command::new("sh").arg("-c").arg(&command).status().await;
         terminal::enable_raw_mode()?;
-        crossterm::execute!(io::stdout(), EnterAlternateScreen)?;
-        terminal.clear()?;
+        crossterm::execute!(
+            io::stdout(),
+            EnterAlternateScreen,
+            Clear(ClearType::All),
+            Hide
+        )?;
+        // Blank both buffers so the next draw repaints everything. `Terminal::clear` would do it
+        // too, but it first asks the terminal for the cursor, which can time out right after a
+        // child exits.
+        terminal.swap_buffers();
         match status {
             Ok(status) if status.success() => {
                 if let Some(done) = done {
