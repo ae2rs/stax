@@ -41,11 +41,15 @@ async fn drive(terminal: &mut DefaultTerminal, mut app: App, client: Client) -> 
         // A child process needs the terminal's input to itself, so the event stream (and the
         // thread it reads input on) lives only while the dashboard shows.
         let mut events = EventStream::new();
-        let (command, refresh) = 'events: loop {
+        let (command, refresh, done) = 'events: loop {
             while let Some(effect) = pending.pop() {
                 match effect {
                     Effect::Quit => return Ok(()),
-                    Effect::Shell { command, refresh } => break 'events (command, refresh),
+                    Effect::Shell {
+                        command,
+                        refresh,
+                        done,
+                    } => break 'events (command, refresh, done),
                     Effect::Fetch(indices) => {
                         for index in indices {
                             let section = app.sections()[index].section.clone();
@@ -117,7 +121,11 @@ async fn drive(terminal: &mut DefaultTerminal, mut app: App, client: Client) -> 
         crossterm::execute!(io::stdout(), EnterAlternateScreen)?;
         terminal.clear()?;
         match status {
-            Ok(status) if status.success() => {}
+            Ok(status) if status.success() => {
+                if let Some(done) = done {
+                    app.set_status(done);
+                }
+            }
             Ok(status) => app.set_status(format!("`{command}` failed: {status}")),
             Err(err) => app.set_status(format!("cannot run `{command}`: {err}")),
         }

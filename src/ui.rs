@@ -198,7 +198,7 @@ fn draw_footer(frame: &mut Frame, area: Rect, app: &App) {
         Some(status) => Line::from(status).fg(Color::Yellow),
         None => {
             let mut hints = String::from(
-                "j/k move · h/l section · space fold · p preview · o open · y copy · d diff · v approve · m merge · r/R refresh · q quit",
+                "j/k move · h/l section · space fold · p preview · o open · y copy · d diff · C checkout · v approve · m merge · r/R refresh · q quit",
             );
             for binding in app.keybindings() {
                 hints.push_str(&format!(" · {} {}", binding.key, binding.name));

@@ -51,14 +51,17 @@ impl CommandTemplate {
                         Field::Base => &pr.base,
                         Field::Author => &pr.author,
                     };
-                    out.push('\'');
-                    out.push_str(&value.replace('\'', r"'\''"));
-                    out.push('\'');
+                    out.push_str(&shell_quote(value));
                 }
             }
         }
         out
     }
+}
+
+/// `s` as one single-quoted shell word.
+pub fn shell_quote(s: &str) -> String {
+    format!("'{}'", s.replace('\'', r"'\''"))
 }
 
 impl TryFrom<String> for CommandTemplate {

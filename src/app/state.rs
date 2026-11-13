@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use crate::config::{Config, Keybinding, Section};
+use crate::config::{Config, Keybinding, RepoPaths, Section, shell_quote};
 use crate::github::PullRequest;
 use crate::stack::{Row, Stacks};
 
@@ -13,6 +13,7 @@ pub struct App {
     /// Node ids of folded PRs, kept across refreshes and sections.
     folded: HashSet<String>,
     keybindings: Vec<Keybinding>,
+    repo_paths: RepoPaths,
     preview: bool,
     preview_scroll: u16,
     status: Option<String>,
@@ -34,11 +35,12 @@ pub enum Effect {
     Quit,
     /// Fetch these sections, by index.
     Fetch(Vec<usize>),
-    /// Suspend the dashboard and run a shell command in the terminal; refetch the current
-    /// section afterwards when `refresh` is set.
+    /// Suspend the dashboard and run a shell command in the terminal; then refetch the current
+    /// section when `refresh` is set, and show `done` if it succeeded.
     Shell {
         command: String,
         refresh: bool,
+        done: Option<String>,
     },
     OpenUrl(String),
     Copy(String),
@@ -68,6 +70,7 @@ impl App {
             tab: 0,
             folded: HashSet::new(),
             keybindings: config.keybindings,
+            repo_paths: config.repo_paths,
             preview: true,
             preview_scroll: 0,
             status: None,
@@ -185,6 +188,7 @@ impl App {
             return Some(Effect::Shell {
                 command: binding.command.render(pr),
                 refresh: false,
+                done: None,
             });
         }
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
@@ -217,18 +221,34 @@ impl App {
     /// Keys that act on the selected PR.
     fn pr_action(&mut self, code: KeyCode) -> Option<Effect> {
         let pr = self.selected_pr()?.clone();
-        let target = format!("-R '{}' {}", pr.repo, pr.number);
+        let target = format!("-R {} {}", shell_quote(&pr.repo), pr.number);
+        let shell = |command: String, refresh: bool| Effect::Shell {
+            command,
+            refresh,
+            done: None,
+        };
         match code {
             KeyCode::Char('o') => Some(Effect::OpenUrl(pr.url)),
             KeyCode::Char('y') => Some(Effect::Copy(pr.url)),
-            KeyCode::Char('d') => Some(Effect::Shell {
-                command: format!("gh pr diff --color always {target} | less -R"),
-                refresh: false,
-            }),
-            KeyCode::Char('m') => Some(Effect::Shell {
-                command: format!("gh pr merge {target}"),
-                refresh: true,
-            }),
+            KeyCode::Char('d') => Some(shell(
+                format!("gh pr diff --color always {target} | less -R"),
+                false,
+            )),
+            KeyCode::Char('m') => Some(shell(format!("gh pr merge {target}"), true)),
+            KeyCode::Char('C') => {
+                let Some(path) = self.repo_paths.get(&pr.repo) else {
+                    self.status = Some(format!(
+                        "No local path for {}; add it to [repo_paths]",
+                        pr.repo
+                    ));
+                    return None;
+                };
+                Some(Effect::Shell {
+                    command: format!("cd {} && gh pr checkout {}", shell_quote(&path), pr.number),
+                    refresh: false,
+                    done: Some(format!("Checked out #{} in {path}", pr.number)),
+                })
+            }
             KeyCode::Char('v') => {
                 self.confirm = Some(Confirm::Approve(Box::new(pr)));
                 None
@@ -347,7 +367,8 @@ mod tests {
             press(&mut app, KeyCode::Char('o')),
             Some(Effect::Shell {
                 command: "echo '4'".to_owned(),
-                refresh: false
+                refresh: false,
+                done: None,
             })
         );
     }

@@ -4,7 +4,7 @@ use std::{env, fs, io};
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 
-use super::{CommandTemplate, Key};
+use super::{CommandTemplate, Key, RepoPaths};
 
 /// The most results one GitHub search request returns.
 const MAX_LIMIT: u32 = 100;
@@ -16,6 +16,8 @@ pub struct Config {
     pub sections: Vec<Section>,
     #[serde(default)]
     pub keybindings: Vec<Keybinding>,
+    #[serde(default)]
+    pub repo_paths: RepoPaths,
 }
 
 /// A dashboard tab: the PRs one GitHub search returns.
@@ -74,6 +76,7 @@ impl Default for Config {
         Config {
             sections: default_sections(),
             keybindings: Vec::new(),
+            repo_paths: RepoPaths::default(),
         }
     }
 }

@@ -25,3 +25,9 @@ limit = 40
 key = "ctrl+l"
 name = "lazygit"
 command = "cd ~/src/$(basename {repo}) && lazygit"
+
+# Where repos are checked out, for checkout (C). `owner/*` covers every repo of an owner,
+# with `*` standing for the repo's name. An exact name wins over a wildcard.
+[repo_paths]
+"dlvhdr/gh-dash" = "~/src/gh-dash"
+"ae2rs/*" = "~/src/*"
