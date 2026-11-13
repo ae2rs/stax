@@ -1,12 +1,15 @@
 mod config;
 mod github;
+mod stack;
 
+use std::collections::HashSet;
 use std::env;
 
 use anyhow::{Result, bail};
 
 use crate::config::Config;
 use crate::github::Client;
+use crate::stack::Stacks;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -17,11 +20,10 @@ async fn main() -> Result<()> {
             for section in &config.sections {
                 let prs = client.search(&section.filters, section.limit).await?;
                 println!("{} ({})", section.title, prs.len());
-                for pr in prs {
-                    println!(
-                        "  {} #{} {} [{} <- {}]",
-                        pr.repo, pr.number, pr.title, pr.base, pr.head
-                    );
+                let stacks = Stacks::new(prs);
+                for row in stacks.rows(&HashSet::new()) {
+                    let pr = stacks.pr(row.index);
+                    println!("  {}#{} {} ({})", row.guide, pr.number, pr.title, pr.repo);
                 }
             }
             Ok(())
