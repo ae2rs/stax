@@ -92,6 +92,10 @@ impl Stacks {
         self.prs.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.prs.is_empty()
+    }
+
     /// The visible rows, depth first, skipping what lies under a folded PR (by node id).
     pub fn rows(&self, folded: &HashSet<String>) -> Vec<Row> {
         let mut rows = Vec::new();
